@@ -1,0 +1,1 @@
+## gonna using openvoice from ttsx for real voice

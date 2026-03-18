@@ -1,0 +1,1 @@
+# here core logic for diva to work with ollam or llama.cpp
