@@ -1,0 +1,8 @@
+torch
+torchaudio
+numpy
+sounddevice
+faster-whisper
+anthropic
+python-dotenv
+pyttsx3
