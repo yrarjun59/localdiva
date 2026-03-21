@@ -18,7 +18,7 @@ MAX_SPEECH_DURATION   = 15.0    # force cut very long speech
 
 MIC_DEVICE            = None    # None = system default
 
-DEBUG_MODE = True          # turn debug on/off
+DEBUG_MODE = False          # turn debug on/off
 DEBUG_INTERVAL = 0.1       # seconds between debug prints
 
 # ── MIC + VAD CLASS ──────────────────────────────────────────────
@@ -161,16 +161,18 @@ class MicVAD:
         print("[MIC] Stopped")
 
 
-def on_speech_ready(audio_np, sample_rate):
-    """
-    Callback triggered when a full speech segment is detected.
-    """
-    duration = len(audio_np) / sample_rate
-    print(f"\n[CALLBACK] Speech segment received: {duration:.2f} sec")
 
 
 if __name__ == "__main__":
     print("[SYSTEM] Initializing MicVAD test...")
+
+    def on_speech_ready(audio_np, sample_rate):
+        """
+        Callback triggered when a full speech segment is detected.
+        """
+        duration = len(audio_np) / sample_rate
+        print(f"\n[CALLBACK] Speech segment received: {duration:.2f} sec")
+
 
     mic_vad = MicVAD(on_speech_ready)
 
