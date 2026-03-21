@@ -4,6 +4,7 @@ import torch
 import queue
 import threading
 from silero_vad import load_silero_vad
+import time
 
 # ── CONFIGURATION ────────────────────────────────────────────────
 SAMPLE_RATE           = 16000   # Whisper expects 16kHz
@@ -16,6 +17,9 @@ MIN_SPEECH_DURATION   = 0.3     # ignore very short sounds
 MAX_SPEECH_DURATION   = 15.0    # force cut very long speech
 
 MIC_DEVICE            = None    # None = system default
+
+DEBUG_MODE = True          # turn debug on/off
+DEBUG_INTERVAL = 0.1       # seconds between debug prints
 
 # ── MIC + VAD CLASS ──────────────────────────────────────────────
 class MicVAD:
@@ -63,6 +67,9 @@ class MicVAD:
         chunks_per_sec = SAMPLE_RATE / CHUNK_SAMPLES
         silence_limit  = int((SILENCE_DURATION_MS / 1000) * chunks_per_sec)
 
+        import time
+        last_debug_time = time.time()
+
         while self.running:
             try:
                 chunk = self.audio_queue.get(timeout=0.1)
@@ -73,6 +80,19 @@ class MicVAD:
             chunk_tensor = torch.from_numpy(chunk)
             speech_prob  = self.vad_model(chunk_tensor, SAMPLE_RATE).item()
             is_speech    = speech_prob >= VAD_THRESHOLD
+
+            # ── DEBUG VISUALIZATION ───────────────────────
+            if DEBUG_MODE:
+                now = time.time()
+                if now - last_debug_time >= DEBUG_INTERVAL:
+                    bar = "#" * int(speech_prob * 20)
+                    print(
+                        f"[DEBUG] [{bar:<20}] "
+                        f"prob={speech_prob:.3f} | "
+                        f"speech={is_speech} | "
+                        f"speaking={is_speaking}"
+                    )
+                    last_debug_time = now
 
             if is_speech:
                 if not is_speaking:
@@ -139,3 +159,34 @@ class MicVAD:
             self.stream.stop()
             self.stream.close()
         print("[MIC] Stopped")
+
+
+def on_speech_ready(audio_np, sample_rate):
+    """
+    Callback triggered when a full speech segment is detected.
+    """
+    duration = len(audio_np) / sample_rate
+    print(f"\n[CALLBACK] Speech segment received: {duration:.2f} sec")
+
+
+if __name__ == "__main__":
+    print("[SYSTEM] Initializing MicVAD test...")
+
+    mic_vad = MicVAD(on_speech_ready)
+
+    try:
+        mic_vad.start()
+        print("[SYSTEM] Running... Speak into the mic (Ctrl+C to stop)\n")
+
+        # Keep main thread alive
+        while True:
+            import time
+            time.sleep(1)
+
+    except KeyboardInterrupt:
+        print("\n[SYSTEM] Stopping...")
+        mic_vad.stop()
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        mic_vad.stop()
