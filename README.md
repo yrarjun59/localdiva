@@ -39,21 +39,6 @@ I should use [tool_name] to get accurate data...
 [answer]
 ```
 
-## Project Structure
-
-```
-localdiva/
-├── main.py                 # Entry point
-├── diva_brain.py          # LLM brain with tool integration
-├── diva_mcp.py            # MCP tools wrapper
-├── diva_mic.py            # VAD/Microphone
-├── diva_stt.py            # Whisper STT
-├── diva_tts.py            # TTS (XTTS v2)
-├── mcp_servers/
-│   ├── weather_mcp_server.py   # Weather MCP server
-│   └── web_search_mcp_server.py # Web search MCP server
-└── .env                   # API keys
-```
 
 ## Setup
 
@@ -64,8 +49,8 @@ pip install -r requirements.txt
 
 ### 2. Install Ollama
 ```bash
-# Download from https://ollama.ai
-ollama pull llama3.2
+# Download from https://ollama.ai 
+ollama pull llama3.2 # or any models
 ```
 
 ### 3. Configure API Keys
@@ -102,42 +87,39 @@ python main.py
 
 ```
 ┌─────────────────────────────────────────────┐
-│                  main.py                     │
-│  (VAD → STT → Brain → LLM → Response)     │
+│                  main.py                    │
+│  (VAD → STT → Brain → LLM → Response)       │  
 └─────────────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────────┐
-│              diva_brain.py                   │
+│              diva_brain.py                  │
 │  • Detects tool needs                       │
-│  • Shows thinking process                    │
+│  • Shows thinking process                   │
 │  • Streams tokens                           │
 └─────────────────────────────────────────────┘
                     │
           ┌─────────┴─────────┐
           ▼                   ▼
 ┌─────────────────┐  ┌─────────────────┐
-│    diva_mcp.py  │  │    Ollama LLM    │
-│  • Tool schemas  │  │  (llama3.2)     │
+│    diva_mcp.py  │  │    Ollama LLM   │
+│  • Tool schemas │  │  (llama3.2)     │
 │  • Executes     │  │                 │
 └─────────────────┘  └─────────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────┐
-│              MCP Servers                     │
-│  • weather_mcp_server.py                   │
-│  • web_search_mcp_server.py                │
+│              MCP Servers                    │
+│  • weather_mcp_server.py                    │
+│  • web_search_mcp_server.py                 │
 └─────────────────────────────────────────────┘
 ```
 
 ## API Keys Required
+OpenWeatherMap [api-key](https://openweathermap.org/api)
+Tavily [api-key](https://app.tavily.com/)
 
-| Service | Purpose | Free Tier |
-|---------|---------|-----------|
-| OpenWeatherMap | Weather data | 1000 calls/day |
-| Tavily | Web search | 1000 calls/month |
-
-## Future Plans
+## working on......
 
 - [ ] Add TTS streaming integration (XTTS v2)
 - [ ] Add email MCP server
