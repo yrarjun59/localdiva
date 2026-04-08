@@ -6,3 +6,7 @@ faster-whisper
 anthropic
 python-dotenv
 pyttsx3
+ollama
+mcp
+httpx
+tavily-python
