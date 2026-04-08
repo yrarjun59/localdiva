@@ -1,5 +1,7 @@
 # diva_stt.py
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import time
 import queue
 import threading
@@ -15,17 +17,23 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 if HF_TOKEN: os.environ["HF_TOKEN"] = HF_TOKEN
 
 MODEL_SIZE = "large-v3-turbo"
-# MODEL_SIZE = "base"
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+try:
+    import torch
+    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+except:
+    DEVICE = "cpu"
+
 COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
-BEAM_SIZE = 3  # increase for better accuracy
+BEAM_SIZE = 5  # higher = better accuracy
+BEST_OF = 5    # sampling candidates, improves accuracy
+VAD_FILTER = True  # use Silero VAD internally in Whisper for better chunking
 
 DEBUG_AUDIO = False
 DEBUG_WHISPER = False
-DEBUG_LATENCY = False
+DEBUG_LATENCY = True
 
-MIN_SEGMENT_DURATION = 0.3  # ignore very short speech
-MIN_CONFIDENCE = 0.4        # ignore low-confidence segments
+MIN_SEGMENT_DURATION = 0.3  # ignore very short segments
 
 # ---------------- QUEUE ----------------
 transcription_queue = queue.Queue()
@@ -57,27 +65,17 @@ def transcribe_audio(audio_np: np.ndarray) -> str:
         if DEBUG_AUDIO:
             print(f"[AUDIO] Max:{max_amp:.3f}, RMS:{rms:.3f}, Mean:{mean_amp:.3f}, Clipping:{clipping_warning}")
 
-        # Convert to int16 for Whisper
-        audio_int16 = np.int16(audio_np * 32767)
-
-        # Transcribe with beam search
+        # Transcribe - faster-whisper expects float32 audio
         segments, _ = whisper_model.transcribe(
-            audio_int16,
+            audio_np,
             language="en",
             beam_size=BEAM_SIZE,
+            best_of=BEST_OF,
+            vad_filter=VAD_FILTER,
             task="transcribe"
         )
 
-        texts = []
-        for seg in segments:
-            text_piece = seg.text.strip()
-            # Skip very short or low-confidence segments
-            duration = seg.end - seg.start
-            if duration < MIN_SEGMENT_DURATION:
-                continue
-            texts.append(text_piece)
-            if DEBUG_WHISPER:
-                print(f"[WHISPER DEBUG] {seg.start:.2f}s → {seg.end:.2f}s | {text_piece}")
+        texts = [seg.text.strip() for seg in segments if (seg.end - seg.start) >= MIN_SEGMENT_DURATION]
 
         full_text = " ".join(texts).strip()
 
