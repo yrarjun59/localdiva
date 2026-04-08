@@ -59,10 +59,11 @@ Create `.env` file:
 OPENWEATHERMAP_API_KEY=your_key
 TAVILY_API_KEY=your_key
 ```
+## API Keys Required
 
 Get free API keys:
-- OpenWeatherMap: https://openweathermap.org/api
-- Tavily: https://app.tavily.com
+- OpenWeatherMap: [get-key-from-here](https://openweathermap.org/api)
+- Tavily: [get-key-from-here](https://app.tavily.com)
 
 ### 4. Run
 ```bash
@@ -115,9 +116,7 @@ python main.py
 └─────────────────────────────────────────────┘
 ```
 
-## API Keys Required
-OpenWeatherMap [api-key](https://openweathermap.org/api)
-Tavily [api-key](https://app.tavily.com/)
+
 
 ## working on......
 
