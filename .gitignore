@@ -3,3 +3,9 @@ ignore
 __pycache__
 .env
 __ignore
+requirements.md
+ognore
+test.py
+#disabling other mcps
+mcp_servers/email_mcp.py
+mcp_servers/__pycache__
